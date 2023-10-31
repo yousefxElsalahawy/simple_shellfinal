@@ -7,6 +7,7 @@
  *
  * Return: 1 if true, 0 otherwise
  */
+
 int check_path(char *path, struct stat *st)
 {
     int result = (!path || stat(path, st)) ? 0 : 1;
@@ -19,11 +20,10 @@ int check_file_mode(struct stat *st)
     int result;
 
     if (st->st_mode & S_IFREG)
-	{
         result = 1;
-    } else {
+    else
         result = 0;
-    }
+
     return (result);
 }
 
@@ -35,15 +35,12 @@ int is_cmd(info_t *info, char *path)
     (void)info;
     path_check = check_path(path, &st);
     if (path_check == 0)
-	{
         mode_check = 0;
-    } else {
+    else
         mode_check = check_file_mode(&st);
-    }
 
     return (mode_check);
 }
-
 /**
  * dup_chars - duplicates characters
  * @pathstr: the PATH string
@@ -57,8 +54,7 @@ char *_COpYY_cHaRS_(char *pathstr, int start, int stop, char *buf)
 	int index = start, buffer_index = 0;
 
 	do {
-		if (pathstr[index] != ':')
-		{
+		if (pathstr[index] != ':') {
 			buf[buffer_index] = pathstr[index];
 			buffer_index++;
 		}
@@ -72,8 +68,10 @@ char *_COpYY_cHaRS_(char *pathstr, int start, int stop, char *buf)
 char *dup_chars(char *pathstr, int start, int stop)
 {
 	static char buffer[1024];
+
 	return (_COpYY_cHaRS_(pathstr, start, stop, buffer));
 }
+
 /**
  * find_path - finds this cmd in the PATH string
  * @info: the info struct
@@ -82,6 +80,7 @@ char *dup_chars(char *pathstr, int start, int stop)
  *
  * Return: full path of cmd if found or NULL
  */
+
 char *check_cmd(info_t *info, char *cmd)
 {
 	return (((_strlen(cmd) > 2) && starts_with(cmd, "./") && is_cmd(info, cmd)) ? cmd : NULL);
@@ -91,21 +90,18 @@ char *build_path(char *path, char *cmd)
 {
 	if (!*path)
 		_strcat(path, cmd);
-	else
-	{
+	else {
 		_strcat(path, "/");
 		_strcat(path, cmd);
 	}
 	return (path);
 }
-
 char *find_cmd_in_path(info_t *info, char *pathstr, char *cmd, int i, int curr_pos)
 {
 	char *path;
 
 	do {
-		if (!pathstr[i] || pathstr[i] == ':')
-		{
+		if (!pathstr[i] || pathstr[i] == ':') {
 			path = dup_chars(pathstr, curr_pos, i);
 			path = build_path(path, cmd);
 			if (is_cmd(info, path))

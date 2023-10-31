@@ -8,17 +8,17 @@
  */
 int is_null(void **ptr)
 {
-    return (!ptr || !*ptr ? 1 : 0);
+	return (!ptr || !*ptr ? 1 : 0);
 }
 
 void free_and_nullify(void **ptr)
 {
-    free(*ptr);
-    *ptr = NULL;
+	free(*ptr);
+	*ptr = NULL;
 }
 
 int bfree(void **ptr)
 {
-    return (is_null(ptr) ? 0 : (free_and_nullify(ptr), 1));
+	return (is_null(ptr) ? 0 : (free_and_nullify(ptr), 1));
 }
 

@@ -8,22 +8,22 @@
  */
 void _eputchar_loop(char *str, int i)
 {
-    int j = i; /*إضافة متغير جديد لا يغير النتيجة النهائي*/
+	int j = i; /*Decluration*/
 
-    if (str[j] != '\0')
-    {
-        _eputchar(str[j]);
-        _eputchar_loop(str, j + 1);
-    }
+	if (str[j] != '\0')
+	{
+		_eputchar(str[j]);
+		_eputchar_loop(str, j + 1);
+	}
 }
 
 void _eputs(char *str)
 {
-    char *temp = str; /*إضافة متغير جديد لا يغير النتيجة النهائية
-*/ 
-    if (!temp)
-        return;
-    _eputchar_loop(temp, 0);
+	char *temp = str; /*إض النهائية*/
+
+	if (!temp)
+		return;
+	_eputchar_loop(temp, 0);
 }
 /**
  * _eputchar - writes the character c to stderr
@@ -34,27 +34,27 @@ void _eputs(char *str)
  */
 void _buffer_flush(char *buf, int *i)
 {
-    int j = *i; /*إضافة متغير جديد لا يغير النتيجة النهائية*/
+	int j = *i; /*إضافة متغيرئية*/
 
-	
-    if (i == NULL) /* الشرط الجدي*/
-        return;
 
-	
-    write(2, buf, j);
-    *i = 0;
+	if (i == NULL) /* الشرط الجدي*/
+		return;
+
+
+	write(2, buf, j);
+	*i = 0;
 }
 
 int _eputchar(char c)
 {
 	static int i;
 	static char buf[WRITE_BUF_SIZE];
-    char temp = c;
+	char temp = c;
 
-	/*إضافة متغير جديد لا يغير النتيجة النهائية*/ 
+	/*إالنتيجة النهائية*/
 	if (temp == BUF_FLUSH || i >= WRITE_BUF_SIZE)
 		_buffer_flush(buf, &i);
-	
+
 	if (temp != BUF_FLUSH)
 		buf[i++] = temp;
 	return (1);
@@ -70,20 +70,20 @@ int _eputchar(char c)
  */
 void _write_to_buffer(char **buf_ptr, char *buf_end, int fd)
 {
-    int count = *buf_ptr - buf_end;
+	int count = *buf_ptr - buf_end;
 
-    if (count > 0)
+	if (count > 0)
 	{
-        write(fd, buf_end, count);
+		write(fd, buf_end, count);
 
-        *buf_ptr = buf_end;
-    }
+		*buf_ptr = buf_end;
+	}
 }
 
 int _putfd(char c, int fd)
 {
 	static char buf[WRITE_BUF_SIZE];
-    static char *buf_ptr = buf;
+	static char *buf_ptr = buf;
 
 	if (c == BUF_FLUSH || buf_ptr >= buf + WRITE_BUF_SIZE)
 	{
@@ -105,14 +105,14 @@ int _putfd(char c, int fd)
  */
 int _putfd_loop(char **str, int fd, int i)
 {
-    if (!**str)
-        return i;
-    i += _putfd(**str, fd);
-    (*str)++;
-    return (_putfd_loop(str, fd, i));
+	if (!**str)
+		return (i);
+	i += _putfd(**str, fd);
+	(*str)++;
+	return (_putfd_loop(str, fd, i));
 }
 
 int _putsfd(char *str, int fd)
 {
-    return (str ? _putfd_loop(&str, fd, 0) : 0);
+	return (str ? _putfd_loop(&str, fd, 0) : 0);
 }

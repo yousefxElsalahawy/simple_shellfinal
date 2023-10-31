@@ -8,20 +8,20 @@
  */
 char **refresh_environ(info_t *info)
 {
-    if (info->env)
-    {
-        info->environ = list_to_strings(info->env);
-        info->env_changed = 0;
-    }
-    return (info->environ);
+	if (info->env)
+	{
+		info->environ = list_to_strings(info->env);
+		info->env_changed = 0;
+	}
+	return (info->environ);
 }
 
 char **get_environ(info_t *info)
 {
-    char **environ = info->environ;
-    int env_changed = info->env_changed;
+	char **environ = info->environ;
+	int env_changed = info->env_changed;
 
-    return ((!environ || env_changed) ? refresh_environ(info) : environ);
+	return ((!environ || env_changed) ? refresh_environ(info) : environ);
 }
 /**
  * _unsetenv - Remove an environment variable
@@ -32,39 +32,39 @@ char **get_environ(info_t *info)
  */
 char *get_starting_string(list_t *node, char *var)
 {
-    return (starts_with(node->str, var));
+	return (starts_with(node->str, var));
 }
 
 int reset_environment(info_t *info, size_t *i, list_t **node)
 {
-    int env_changed = delete_node_at_index(&(info->env), *i);
+	int env_changed = delete_node_at_index(&(info->env), *i);
 
-    *i = 0;
-    *node = info->env;
+	*i = 0;
+	*node = info->env;
 
-    return (env_changed);
+	return (env_changed);
 }
 
 int _unsetenv(info_t *info, char *var)
 {
-    list_t *node = info->env;
-    size_t i = 0;
-    char *p;
+	list_t *node = info->env;
+	size_t i = 0;
+	char *p;
 
-    if (!node || !var)
-        return (0);
+	if (!node || !var)
+		return (0);
 
-    do {
-        p = get_starting_string(node, var);
+	do {
+		p = get_starting_string(node, var);
 
-        if (p && *p == '=')
-            return (reset_environment(info, &i, &node));
+		if (p && *p == '=')
+			return (reset_environment(info, &i, &node));
 
-        node = node->next;
-        i++;
-    } while (node);
+		node = node->next;
+		i++;
+	} while (node);
 
-    return (info->env_changed);
+	return (info->env_changed);
 }
 
 /**
@@ -78,59 +78,59 @@ int _unsetenv(info_t *info, char *var)
  */
 char *create_buf(char *var, char *value)
 {
-    char *buf = malloc(_strlen(var) + _strlen(value) + 2);
+	char *buf = malloc(_strlen(var) + _strlen(value) + 2);
 
-    if (buf)
-    {
-        _strcpy(buf, var);
-        _strcat(buf, "=");
-        _strcat(buf, value);
-    }
-    return (buf);
+	if (buf)
+	{
+		_strcpy(buf, var);
+		_strcat(buf, "=");
+		_strcat(buf, value);
+	}
+	return (buf);
 }
 
 list_t *find_var_in_env(list_t *node, char *var, char *buf, info_t *info)
 {
-    char *p;
+	char *p;
 
-    if (node)
-    {
-        do {
-            p = starts_with(node->str, var);
+	if (node)
+	{
+		do {
+			p = starts_with(node->str, var);
 
-            if (p && *p == '=')
-            {
-                free(node->str);
-                node->str = buf;
-                info->env_changed = 1;
-                return (node);
-            }
-            node = node->next;
-        } while (node);
-    }
-    return (NULL);
+			if (p && *p == '=')
+			{
+				free(node->str);
+				node->str = buf;
+				info->env_changed = 1;
+				return (node);
+			}
+			node = node->next;
+		} while (node);
+	}
+	return (NULL);
 }
 
 void add_node_and_free_buf(list_t **env, char *buf, info_t *info)
 {
-    add_node_end(env, buf, 0);
-    free(buf);
-    info->env_changed = 1;
+	add_node_end(env, buf, 0);
+	free(buf);
+	info->env_changed = 1;
 }
 
 int _setenv(info_t *info, char *var, char *value)
 {
-    char *buf;
-    list_t *node;
+	char *buf;
+	list_t *node;
 
-    if (!var || !value)
-        return (0);
+	if (!var || !value)
+		return (0);
 
-    buf = create_buf(var, value);
-    if (!buf)
-        return (1);
+	buf = create_buf(var, value);
+	if (!buf)
+		return (1);
 
-    node = find_var_in_env(info->env, var, buf, info);
+	node = find_var_in_env(info->env, var, buf, info);
 
-    return (node ? 0 : (add_node_and_free_buf(&(info->env), buf, info), 0));
+	return (node ? 0 : (add_node_and_free_buf(&(info->env), buf, info), 0));
 }

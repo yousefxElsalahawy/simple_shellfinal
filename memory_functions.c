@@ -30,22 +30,22 @@ char *_memset(char *s, char b, unsigned int n)
  */
 void freeArray(char **pp, int i)
 {
-    for (; pp[i] != NULL; i++)
-        free(pp[i]);
+	for (; pp[i] != NULL; i++)
+		free(pp[i]);
 }
 
 void ffree(char **pp)
 {
-    char **a = pp;
-    int i = 0;
+	char **a = pp;
+	int i = 0;
 
-    if (pp == NULL)
-        return;
+	if (pp == NULL)
+		return;
 
-    freeArray(pp, i);
+	freeArray(pp, i);
 
-    free(a);
-    a = NULL;
+	free(a);
+	a = NULL;
 }
 
 /**
@@ -58,41 +58,41 @@ void ffree(char **pp)
  */
 void *allocate_memory(unsigned int size)
 {
-    char *p = malloc(size);
+	char *p = malloc(size);
 
-    return ((!p) ? NULL : p);
+	return ((!p) ? NULL : p);
 }
 
 void copy_memory(void *ptr, char *p, unsigned int size)
 {
-    do {
-        size--;
-        p[size] = ((char *)ptr)[size];
-    } while (size > 0);
-    free(ptr);
+	do {
+		size--;
+		p[size] = ((char *)ptr)[size];
+	} while (size > 0);
+	free(ptr);
 }
 
 void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size)
 {
-    char *p;
+	char *p;
 
-    switch (new_size)
-    {
-    case 0:
-        free(ptr);
-        return (NULL);
-    default:
-        if (!ptr)
-            return (allocate_memory(new_size));
-			
-        if (new_size == old_size)
-            return (ptr);
+	switch (new_size)
+	{
+		case 0:
+			free(ptr);
+			return (NULL);
+		default:
+			if (!ptr)
+				return (allocate_memory(new_size));
 
-        p = allocate_memory(new_size);
-        if (!p)
-            return (NULL);
+			if (new_size == old_size)
+				return (ptr);
 
-        copy_memory(ptr, p, (old_size < new_size) ? old_size : new_size);
-        return (p);
-    }
+			p = allocate_memory(new_size);
+			if (!p)
+				return (NULL);
+
+			copy_memory(ptr, p, (old_size < new_size) ? old_size : new_size);
+			return (p);
+	}
 }

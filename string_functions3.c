@@ -9,7 +9,7 @@
  */
 char *_copy_chars_(char *dest, char *src, int n)
 {
-	
+
 	int i = 0;
 
 	while (src[i] != '\0' && i < n - 1)
@@ -57,7 +57,7 @@ char *_strncpy(char *dest, char *src, int n)
 int find_length(char *str)
 {
 	int i = 0;
-	
+
 	do {
 		i++;
 	} while (str[i] != '\0');
@@ -93,20 +93,20 @@ char *_strncat(char *dest, char *src, int n)
  */
 char *check_char(char *s, char c)
 {
-    return ((*s == c) ? s : NULL);
+	return ((*s == c) ? s : NULL);
 }
 
 char *_strchr(char *s, char c)
 {
-    char *result = NULL;
+	char *result = NULL;
 
-    do {
-        result = check_char(s, c);
+	do {
+		result = check_char(s, c);
 
-        if (result != NULL)
-            return (result);
-			
-    } while (*s++ != '\0');
+		if (result != NULL)
+			return (result);
 
-    return (result);
+	} while (*s++ != '\0');
+
+	return (result);
 }

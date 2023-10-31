@@ -8,40 +8,40 @@
  */
 char *process_plus_sign(char *s)
 {
-    char *p = s;
+	char *p = s;
 
-    do {
-        p++;
-    } while (*p == '+');
-    return (p);
+	do {
+		p++;
+	} while (*p == '+');
+	return (p);
 }
 
 unsigned long int process_digits(char *s)
 {
-    unsigned long int result = 0;
-    char current_char = *s;
+	unsigned long int result = 0;
+	char current_char = *s;
 
-    do {
-        if (current_char >= '0' && current_char <= '9')
-        {
-            result = (result << 3) + (result << 1) + (current_char - '0');
-            if (result > INT_MAX)
-                return (-1);
-        }
-        else
-            return (-1);
+	do {
+		if (current_char >= '0' && current_char <= '9')
+		{
+			result = (result << 3) + (result << 1) + (current_char - '0');
+			if (result > INT_MAX)
+				return (-1);
+		}
+		else
+			return (-1);
 
-        current_char = *(++s);
-    } while (current_char != '\0');
+		current_char = *(++s);
+	} while (current_char != '\0');
 
-    return (result);
+	return (result);
 }
 
 int _erratoi(char *s)
 {
-    s = process_plus_sign(s);
+	s = process_plus_sign(s);
 
-    return (process_digits(s));
+	return (process_digits(s));
 }
 /**
  * print_error - prints an error message
@@ -52,32 +52,32 @@ int _erratoi(char *s)
  */
 void print_message(char *message)
 {
-    _eputs(message);
-    _eputs(": ");
+	_eputs(message);
+	_eputs(": ");
 }
 
 void print_error_part1(info_t *info)
 {
-    print_message(info->fname);
+	print_message(info->fname);
 }
 
 void print_error_part2(info_t *info)
 {
-    print_d(info->line_count, STDERR_FILENO);
-    _eputs(": ");
+	print_d(info->line_count, STDERR_FILENO);
+	_eputs(": ");
 }
 
 void print_error_part3(info_t *info, char *estr)
 {
-    print_message(info->argv[0]);
-    print_message(estr);
+	print_message(info->argv[0]);
+	print_message(estr);
 }
 
 void print_error(info_t *info, char *estr)
 {
-    print_error_part1(info);
-    print_error_part2(info);
-    print_error_part3(info, estr);
+	print_error_part1(info);
+	print_error_part2(info);
+	print_error_part3(info, estr);
 }
 
 /**
@@ -89,61 +89,62 @@ void print_error(info_t *info, char *estr)
  */
 int handle_putchar(int fd)
 {
-    return ((fd == STDERR_FILENO) ? 1 : 0);
+	return ((fd == STDERR_FILENO) ? 1 : 0);
 }
 
 unsigned int handle_abs(int input, int (*__putchar)(char), int *count)
 {
-    unsigned int _abs_;
+	unsigned int _abs_;
 
-    if (input < 0)
-    {
-        _abs_ = -input;
-        __putchar('-');
-        (*count)++;
-    }
-    else
-        _abs_ = input;
-    return (_abs_);
+	if (input < 0)
+	{
+		_abs_ = -input;
+		__putchar('-');
+		(*count)++;
+	}
+	else
+		_abs_ = input;
+	return (_abs_);
 }
 
 int handle_current(unsigned int _abs_, int (*__putchar)(char), int *count)
 {
-    int i = 1000000000;
-    unsigned int current = _abs_;
-	
-    do {
-        if (_abs_ / i)
-        {
-            __putchar('0' + current / i);
-            (*count)++;
-        }
-        current %= i;
-        i /= 10;
-    } while (i > 1);
-    return (current);
+	int i = 1000000000;
+	unsigned int current = _abs_;
+
+	do {
+		if (_abs_ / i)
+		{
+			__putchar('0' + current / i);
+			(*count)++;
+		}
+		current %= i;
+		i /= 10;
+	} while (i > 1);
+	return (current);
 }
 
-void handle_last_digit(unsigned int current, int (*__putchar)(char), int *count)
+void handle_last_digit(unsigned int current,
+		int (*__putchar)(char), int *count)
 {
-    __putchar('0' + current);
-    (*count)++;
+	__putchar('0' + current);
+	(*count)++;
 }
 
 int print_d(int input, int fd)
 {
-    int (*__putchar)(char) = _putchar;
-    int count = 0;
-    unsigned int _abs_, current;
+	int (*__putchar)(char) = _putchar;
+	int count = 0;
+	unsigned int _abs_, current;
 
-    int is_stderr = handle_putchar(fd);
-	
-    __putchar = is_stderr ? _eputchar : _putchar;
-    _abs_ = handle_abs(input, __putchar, &count);
-    current = handle_current(_abs_, __putchar, &count);
-    handle_last_digit(current, __putchar, &count);
+	int is_stderr = handle_putchar(fd);
 
-    return (count);
+	__putchar = is_stderr ? _eputchar : _putchar;
+	_abs_ = handle_abs(input, __putchar, &count);
+	current = handle_current(_abs_, __putchar, &count);
+	handle_last_digit(current, __putchar, &count);
+
+	return (count);
 }
 /**
  * convert_number - converter function, a clone of itoa
@@ -153,10 +154,13 @@ int print_d(int input, int fd)
  *
  * Return: string
  */
-char *handle_sign(long int num, int flags, unsigned long *n, char *sign)
+char *handle_sign(long int num, int flags,
+		unsigned long *n, char *sign)
 {
-	(!(flags & CONVERT_UNSIGNED) && num < 0) ? (*n = -num, *sign = '-') : (*n = num, *sign = 0);
-	return ((flags & CONVERT_LOWERCASE) ? "0123456789abcdef" : "0123456789ABCDEF");
+	(!(flags & CONVERT_UNSIGNED) && num < 0) ?
+		(*n = -num, *sign = '-') : (*n = num, *sign = 0);
+	return ((flags & CONVERT_LOWERCASE) ? "0123456789abcdef" :
+			"0123456789ABCDEF");
 }
 
 void convert_base(unsigned long *n, int base, char **ptr, char *array)
@@ -203,20 +207,20 @@ char *convert_number(long int num, int base, int flags)
  */
 void set_to_null(char *p)
 {
-    do {
-        *p = '\0';
-        p++;
-    } while(*p != '\0');
+	do {
+		*p = '\0';
+		p++;
+	} while (*p != '\0');
 }
 
 void remove_comments(char *buf)
 {
-    char *p = buf;
+	char *p = buf;
 
-    do {
-        if (*p == '#' && (p == buf || *(p - 1) == ' '))
-            set_to_null(p);
-        else
-            p++;
-    } while (*p != '\0');
+	do {
+		if (*p == '#' && (p == buf || *(p - 1) == ' '))
+			set_to_null(p);
+		else
+			p++;
+	} while (*p != '\0');
 }

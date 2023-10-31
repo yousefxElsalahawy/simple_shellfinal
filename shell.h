@@ -135,11 +135,12 @@ typedef struct builtin
 
 /* hsh.c */
 void prompt_user(info_t *info);
-void _handle_with_input_(info_t *info, char **av, ssize_t *r, int *builtin_ret);
+void _handle_with_input_(info_t *info, char **av, ssize_t *r,
+		int *builtin_ret);
 void handle_exit(info_t *info, int builtin_ret);
 void cleanup(info_t *info);
 int hsh(info_t *info, char **av);
-builtin_table* initialize_builtin_table();
+builtin_table *initialize_builtin_table(void);
 int execute_builtin(info_t *info, builtin_table *builtintbl, int i);
 int find_builtin(info_t *info);
 void increment_line_count(info_t *info);
@@ -160,7 +161,8 @@ char *_COpYY_cHaRS_(char *pathstr, int start, int stop, char *buf);
 char *dup_chars(char *pathstr, int start, int stop);
 char *check_cmd(info_t *info, char *cmd);
 char *build_path(char *path, char *cmd);
-char *find_cmd_in_path(info_t *info, char *pathstr, char *cmd, int i, int curr_pos);
+char *find_cmd_in_path(info_t *info, char *pathstr,
+		char *cmd, int i, int curr_pos);
 char *find_path(info_t *info, char *pathstr, char *cmd);
 /* loophsh.c */
 int loophsh(char **);
@@ -259,7 +261,8 @@ void print_error(info_t *info, char *estr);
 int handle_putchar(int fd);
 unsigned int handle_abs(int input, int (*__putchar)(char), int *count);
 int handle_current(unsigned int _abs_, int (*__putchar)(char), int *count);
-void handle_last_digit(unsigned int current, int (*__putchar)(char), int *count);
+void handle_last_digit(unsigned int current,
+		int (*__putchar)(char), int *count);
 int print_d(int input, int fd);
 char *handle_sign(long int num, int flags, unsigned long *n, char *sign);
 void convert_base(unsigned long *n, int base, char **ptr, char *array);
@@ -398,8 +401,10 @@ ssize_t get_node_index(list_t *head, list_t *node);
 int check_operator(info_t *info, char *buf, size_t *j);
 int is_chain(info_t *info, char *buf, size_t *p);
 int check_condition(info_t *info);
-void update_buffer_and_index(info_t *info, char *buf, size_t *index, size_t len);
-void check_chain(info_t *info, char *buf, size_t *p, size_t i, size_t len);
+void update_buffer_and_index(info_t *info, char *buf,
+		size_t *index, size_t len);
+void check_chain(info_t *info, char *buf, size_t *p,
+		size_t i, size_t len);
 list_t *get_node(info_t *info);
 char *get_new_p(list_t *node);
 int replace_alias(info_t *info);
@@ -415,15 +420,15 @@ int replace_string(char **old, char *new);
 
 int process_exit_arg(info_t *info, int exitcheck);
 void print_help_message(info_t *info);
-char* get_current_dir(char *buffer);
+char *get_current_dir(char *buffer);
 int change_dir(info_t *info, char *s, char *dir);
 void update_env_vars(info_t *info, char *buffer, int chdir_ret);
 
-/********************************new function bulit 11********************************/
-char* find_equal_sign(char *str);
+/********************************new function bulit 11*******/
+char *find_equal_sign(char *str);
 int delete_alias_node(info_t *info, char *str);
 int unset_alias(info_t *info, char *str);
-char* find_equal_sign_in_node(list_t *node);
+char *find_equal_sign_in_node(list_t *node);
 void print_node_until_char(list_t *node, char *p);
 int print_alias(list_t *node);
 void print_all_aliases(info_t *info);
