@@ -7,25 +7,51 @@
  *  Return: exits with a given exit status
  *         (0) if info.argv[0] != "exit"
  */
-int process_exit_arg(info_t *info, int exitcheck)
+int alien_translator(char *str)
 {
-	info->status = 2;
+    return (atoi(str));
+}
 
-	print_error(info, "not allow use this Number: ");
-	_eputs(info->argv[1]);
+void interstellar_communicator(info_t *info, char *message)
+{
+    info->status = 2;
+    _eputs(message);
+    _eputs(info->argv[1]);
+    _eputchar('\n');
+}
 
-	_eputchar('\n');
+int galactic_checker(info_t *info)
+{
+    int exitcheck = alien_translator(info->argv[1]);
 
-	return ((exitcheck == -1) ? 1 : -2);
+    return ((exitcheck == -1) ? (interstellar_communicator(info, "Illegal number: "), 1) : exitcheck);
+}
+
+void cosmic_status_setter(info_t *info, int exitcheck)
+{
+    info->err_num = exitcheck;
 }
 
 int _myexit(info_t *info)
 {
-	int exitcheck = (info->argv[1]) ? _erratoi(info->argv[1]) : -1;
+    int exitcheck;
 
-	info->err_num = exitcheck;
-
-	return (process_exit_arg(info, exitcheck));
+    if (info->argv[1])  /* If there is an exit argument */
+    {
+        exitcheck = galactic_checker(info);
+        switch (exitcheck) {
+            case 1:
+                return (1);
+            default:
+                cosmic_status_setter(info, exitcheck);
+                return (-2);
+        }
+    }
+    else
+    {
+        info->err_num = -1;
+        return (-2);
+    }
 }
 /**
  * _myhelp - changes the current directory of the process
