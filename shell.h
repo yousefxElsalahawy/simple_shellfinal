@@ -78,49 +78,31 @@ typedef struct liststr
 
 typedef struct passinfo
 {
-	int status;
-	int env_changed;
-	char **environ;
-	list_t *alias;
-	list_t *history;
-	list_t *env;
-	char *fname;
-	int linecount_flag;
-	int err_num;
-	unsigned int line_count;
-	int argc;
-	char *path;
-	char **argv;
-	char *arg;
-	int readfd;
-	int cmd_buf_type; /* CMD_type ||, &&, ; */
-	char **cmd_buf; /* pointer to cmd ; chain buffer, for memory mangement */
-	int histcount;
+    char *arg;
+    size_t arg_pos;
+    size_t arg_len;
+    char **argv;
+    char *path;
+    int argc;
+    unsigned int line_count;
+    int err_num;
+    int linecount_flag;
+    char *fname;
+    list_t *env;
+    list_t *history;
+    list_t *alias;
+    char **environ;
+    int env_changed;
+    int status;
+    char **cmd_buf; /* pointer to cmd ; chain buffer, for memory mangement */
+    int cmd_buf_type; /* CMD_type ||, &&, ; */
+    int readfd;
+    int histcount;
 } info_t;
 
-#define INFO_INIT  \
-{ \
-	.status = 0, \
-	.env_changed = 0, \
-	.environ = NULL, \
-	.alias = NULL, \
-	.history = NULL, \
-	.env = NULL, \
-	.fname = NULL, \
-	.linecount_flag = 0, \
-	.err_num = 0, \
-	.line_count = 0, \
-	.argc = 0, \
-	.path = NULL, \
-	.argv = NULL, \
-	.arg = NULL, \
-	.readfd = 0, \
-	.cmd_buf_type = 0, \
-	.cmd_buf = NULL, \
-	.histcount = 0 \
-}
-
-
+#define INFO_INIT \
+{NULL, 0, 0, NULL, NULL, 0, 0, 0, 0, NULL, NULL, NULL, \
+	NULL, NULL, 0, 0, NULL, 0, 0, 0}
 /**
  *struct builtin - contains a builtin string and related function
  *@type: the builtin command flag
@@ -285,11 +267,23 @@ ssize_t input_reader(info_t *info, char **buf, size_t *len_p);
 void input_processor(info_t *info, char **buf, ssize_t *r);
 void command_chain_handler(info_t *info, char **buf, size_t *len, ssize_t r);
 ssize_t input_buf(info_t *info, char **buf, size_t *len);
-ssize_t handle_input(info_t *info, char **buf, size_t *len);
-void handle_chain(info_t *info, char *buf, size_t *i, size_t len);
-void handle_buffer_end(info_t *info, size_t *i, size_t *len);
-ssize_t get_input(info_t *info);
 ssize_t read_from_fd(info_t *info, char *buf);
+
+
+
+ssize_t get_input(info_t *info);
+void cryptic_processor(info_t *info);
+ssize_t alien_input(info_t *info, char **buf_p);
+size_t find_end_of_universe(info_t *info, char *buf, size_t start, size_t len);
+size_t update_position_in_space(info_t *info, size_t pos, size_t len);
+void reset_position_in_space(info_t *info);
+
+
+
+
+
+
+
 ssize_t read_buf(info_t *info, char *buf, size_t *i);
 ssize_t buffer_reader(info_t *info, char *buf, size_t *len);
 char *locate_newline(char *buf, size_t i);
@@ -408,11 +402,11 @@ void check_chain(info_t *info, char *buf, size_t *p,
 list_t *get_node(info_t *info);
 char *get_new_p(list_t *node);
 int replace_alias(info_t *info);
-int is_dollar_sign_present(char *arg);
-void replace_status(info_t *info, int i);
-void replace_pid(info_t *info, int i);
-void replace_env_var(info_t *info, int i);
-void replace_empty(info_t *info, int i);
+int check_variable_type(info_t *info, int i);
+void replace_string_with_value(info_t *info, int i, int value);
+list_t *_get_node_(info_t *info, int i);
+void replace_with_node_value(info_t *info, int i, list_t *node);
+void replace_with_empty_string(info_t *info, int i);
 int replace_vars(info_t *info);
 int replace_string(char **old, char *new);
 
@@ -437,3 +431,4 @@ int set_alias(info_t *info, char *str);
 int handle_unset_alias(info_t *info, char *str, char *p);
 
 #endif
+

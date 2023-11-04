@@ -1,6 +1,13 @@
 #include "shell.h"
 
-
+/**
+ * input_buf - buffers chained commands
+ * @info: parameter struct
+ * @buf: address of buffer
+ * @len: address of len var
+ *
+ * Return: bytes read
+ */
 
 void reset_buffer(__attribute__((unused)) info_t *info, char **buf)
 {
@@ -61,20 +68,6 @@ ssize_t input_buf(info_t *info, char **buf, size_t *len)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * get_input - gets a line minus the newline
  * @info: parameter struct
@@ -85,65 +78,67 @@ ssize_t handle_input(info_t *info, char **buf, size_t *len)
 {
 	ssize_t r;
 
-	_putchar(BUF_FLUSH);
+    _putchar(BUF_FLUSH);
 
-	r = input_buf(info, buf, len);
+    r = input_buf(info, buf, len);
 
-	return ((r == -1) ? -1 : r);
+    return ((r == -1) ? -1 : r);
 }
 
-void handle_chain(info_t *info, char *buf, size_t *i, size_t len)
+void init_iterator(size_t *i, size_t *j, char *buf, char **p)
 {
-	size_t j = *i;
-
-	check_chain(info, buf, &j, *i, len);
-
-	do {
-
-		if (is_chain(info, buf, &j))
-			break;
-		j++;
-	} while (j < len);
-
-	*i = j;
+    *j = *i; /* init new iterator to current buf position */
+    *p = buf + *i; /* get pointer for return */
 }
 
-void handle_buffer_end(info_t *info, size_t *i, size_t *len)
+void iterate_to_semicolon_or_end(info_t *info, char *buf, size_t *j, size_t len)
 {
-	*i = *i + 1;
+    do {
+        if (is_chain(info, buf, j))
+            break;
+        (*j)++;
+    } while (*j < len); /* iterate to semicolon or end */
+}
 
-	if (*i >= *len)
-	{
-		*i = *len = 0;
-		info->cmd_buf_type = CMD_NORM;
-	}
+void handle_chain(info_t *info, char *buf, size_t *i, size_t *j, size_t len, char **p)
+{
+    init_iterator(i, j, buf, p);
+    check_chain(info, buf, j, *i, len);
+    iterate_to_semicolon_or_end(info, buf, j, len);
+}
+
+void _RESet_BuFFer_(info_t *info, size_t *i, size_t *len)
+{
+    *i = *len = 0; /* reset position and length */
+    info->cmd_buf_type = CMD_NORM;
 }
 
 ssize_t get_input(info_t *info)
 {
-	static char *buf;
-	static size_t i, len;
-	char **buf_p = &(info->arg), *p;
-	ssize_t r;
+    static char *buf; /* the ';' command chain buffer */
+    static size_t i, j, len;
+    char **buf_p = &(info->arg), *p;
 
-	r = handle_input(info, &buf, &len);
+    ssize_t r = handle_input(info, &buf, &len);
 
-	if (r == -1)
+    if (r == -1)
 		return (-1);
 
-	switch (len)
-	{
-		case 0:
-			*buf_p = buf;
-			return (r);
-		default:
-			handle_chain(info, buf, &i, len);
-			handle_buffer_end(info, &i, &len);
+    if (len)	/* we have commands left in the chain buffer */
+    {
+        handle_chain(info, buf, &i, &j, len, &p);
 
-			p = buf + i;
-			*buf_p = p;
-			return (_strlen(p));
-	}
+        i = j + 1; /* increment past nulled ';'' */
+        if (i >= len) /* reached end of buffer? */
+            _RESet_BuFFer_(info, &i, &len);
+
+        *buf_p = p; /* pass back pointer to current command position */
+
+        return (_strlen(p)); /* return length of current command */
+    }
+
+    *buf_p = buf; /* else not a chain, pass back buffer from _getline() */
+    return (r); /* return length of buffer from _getline() */
 }
 /**
  * read_buf - reads a buffer

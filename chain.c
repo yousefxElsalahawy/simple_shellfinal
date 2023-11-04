@@ -158,83 +158,85 @@ int replace_alias(info_t *info)
 
 
 /**************************************************/
-typedef void (*replace_func)(info_t *, int);
 
-int is_dollar_sign_present(char *arg)
+int check_variable_type(info_t *info, int i)
 {
-	return (arg[0] == '$' && arg[1]);
+    if (info->argv[i][0] != '$' || !info->argv[i][1])
+        return 0;
+    else if (!_strcmp(info->argv[i], "$?"))
+        return 1;
+    else if (!_strcmp(info->argv[i], "$$"))
+        return 2;
+    else
+        return 3;
 }
 
-void replace_status(info_t *info, int i)
+void replace_string_with_value(info_t *info, int i, int value)
 {
-	if (!_strcmp(info->argv[i], "$?"))
-	{
-		replace_string(&(info->argv[i]),
-				_strdup(convert_number(info->status, 10, 0)));
-	}
+    replace_string(&(info->argv[i]), _strdup(convert_number(value, 10, 0)));
 }
 
-void replace_pid(info_t *info, int i)
+list_t *_get_node_(info_t *info, int i)
 {
-	if (!_strcmp(info->argv[i], "$$"))
-	{
-		replace_string(&(info->argv[i]),
-				_strdup(convert_number(getpid(), 10, 0)));
-	}
+    return node_starts_with(info->env, &info->argv[i][1], '=');
 }
 
-void replace_env_var(info_t *info, int i)
+void replace_with_node_value(info_t *info, int i, list_t *node)
 {
-	list_t *node = node_starts_with(info->env,
-			&info->argv[i][1], '=');
-	if (node)
-	{
-		replace_string(&(info->argv[i]),
-				_strdup(_strchr(node->str, '=') + 1));
-	}
+    replace_string(&(info->argv[i]), _strdup(_strchr(node->str, '=') + 1));
 }
 
-void replace_empty(info_t *info, int i)
+void replace_with_empty_string(info_t *info, int i)
 {
-	replace_string(&info->argv[i], _strdup(""));
-}
-
-void replace_vars_helper(info_t *info, replace_func funcs[],
-		int funcs_count)
-{
-	int i = 0, j;
-
-	while (info->argv[i])
-	{
-		if (is_dollar_sign_present(info->argv[i]))
-		{
-			for (j = 0; j < funcs_count; j++)
-			{
-				funcs[j](info, i);
-			}
-		}
-		i++;
-	}
+    replace_string(&info->argv[i], _strdup(""));
 }
 
 int replace_vars(info_t *info)
 {
-	replace_func funcs[] = {replace_status, replace_pid,
-		replace_env_var, replace_empty};
-	int funcs_count = sizeof(funcs) / sizeof(funcs[0]);
+    int i = 0;
+    list_t *node;
+    int var_type;
 
-	replace_vars_helper(info, funcs, funcs_count);
+    do
+    {
+        var_type = check_variable_type(info, i);
 
-	return (0);
+        switch (var_type)
+        {
+        case 0:
+            i++;
+            continue;
+        case 1:
+            replace_string_with_value(info, i, info->status);
+            break;
+        case 2:
+            if (kill(getpid(), 0) == 0) {
+                replace_string_with_value(info, i, getpid());
+            } else {
+                replace_with_empty_string(info, i);
+            }
+            break;
+        case 3:
+            node = _get_node_(info, i);
+            if (node)
+                replace_with_node_value(info, i, node);
+            else
+                replace_with_empty_string(info, i);
+            break;
+        }
+        i++;
+    } while (info->argv[i]);
+
+    return (0);
 }
 
-
-
-
-
-
-
-/*******************************************/
+/**
+ * replace_string - replaces string
+ * @old: address of old string
+ * @new: new string
+ *
+ * Return: 1 if replaced, 0 otherwise
+ */
 int replace_string(char **old, char *new)
 {
 	if (old == NULL || new == NULL)
@@ -249,3 +251,24 @@ int replace_string(char **old, char *new)
 	}
 	return (1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
