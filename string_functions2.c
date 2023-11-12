@@ -7,19 +7,21 @@
  *
  * Return: pointer to destination
  */
-char *_strcpy(char *dest, char *src)
+char *_copy(char *dest, char *src, int i)
 {
-	int i = 0;
-
-	if (dest == src || src == 0)
-		return (dest);
-	while (src[i])
+	if (src[i])
 	{
 		dest[i] = src[i];
-		i++;
+		return _copy(dest, src, i + 1);
 	}
 	dest[i] = 0;
 	return (dest);
+}
+
+char *_strcpy(char *dest, char *src)
+{
+	return ((dest == src || src == 0) ? dest : _copy(dest, src, 0));
+
 }
 
 /**
@@ -28,20 +30,37 @@ char *_strcpy(char *dest, char *src)
  *
  * Return: pointer to the duplicated string
  */
-char *_strdup(const char *str)
+int _strlen___(const char *str)
 {
 	int length = 0;
-	char *ret;
+	const char *s = str ? str : "";
 
-	if (str == NULL)
-		return (NULL);
-	while (*str++)
+	while (*s)
+	{
 		length++;
-	ret = malloc(sizeof(char) * (length + 1));
-	if (!ret)
-		return (NULL);
-	for (length++; length--;)
-		ret[length] = *--str;
+		s++;
+	}
+	return (length);
+}
+
+char *_strdup(const char *str)
+{
+	int length = _strlen___(str);
+	char *ret = (char *) malloc(sizeof(char) * (length + 1));
+
+	if (ret)
+	{
+		char *p = ret;
+		const char *s = str ? str : "";
+
+		while (*s)
+		{
+			*p = *s;
+			p++;
+			s++;
+		}
+		*p = '\0';
+	}
 	return (ret);
 }
 
@@ -51,18 +70,39 @@ char *_strdup(const char *str)
  *
  * Return: Nothing
  */
-void _puts(char *str)
+void _print_char(char *str, char *end)
 {
-	int i = 0;
-
-	if (!str)
-		return;
-	while (str[i] != '\0')
+	if (str != end)
 	{
-		_putchar(str[i]);
-		i++;
+		_putchar(*str);
+		_print_char(str + 1, end);
 	}
 }
+
+void _puts(char *str)
+{
+	char *end = str;
+
+	while (*end)
+		++end;
+	if (str)
+	{
+		_print_char(str, end);
+	}
+	else
+	{
+		return;
+	}
+}
+
+
+
+
+
+
+
+
+
 
 /**
  * _putchar - writes the character c to stdout
@@ -71,6 +111,17 @@ void _puts(char *str)
  * Return: On success 1.
  * On error, -1 is returned, and errno is set appropriately.
  */
+void write_buffer(char *buf, int *i)
+{
+	write(1, buf, *i);
+	*i = 0;
+}
+
+void add_to_buffer(char *buf, int *i, char c)
+{
+	buf[(*i)++] = c;
+}
+
 int _putchar(char c)
 {
 	static int i;
@@ -78,10 +129,11 @@ int _putchar(char c)
 
 	if (c == BUF_FLUSH || i >= WRITE_BUF_SIZE)
 	{
-		write(1, buf, i);
-		i = 0;
+		write_buffer(buf, &i);
 	}
-	if (c != BUF_FLUSH)
-		buf[i++] = c;
+	else
+	{
+		add_to_buffer(buf, &i, c);
+	}
 	return (1);
 }

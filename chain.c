@@ -1,154 +1,361 @@
 #include "shell.h"
 
+
 /**
- * is_chain - test if current char in buffer is a chain delimeter
- * @info: the parameter struct
- * @buf: the char buffer
- * @p: address of current position in buf
+ * check_operator - Checks if current char in buffer is a chain delimeter
+ * @info: This pointer refers to the parameter struct
+ * @buf: This pointer refers to the char buffer
+ * @j: This variable refers to the current position in buf
  *
  * Return: 1 if chain delimeter, 0 otherwise
  */
+int check_operator(info_t *info, char *buf, size_t *j)
+{
+	/* Declaration */
+	if (!buf)
+		return (0);
+
+	/* Use switch */
+	switch (buf[*j])
+	{
+		case '|':
+			/* Check for logical OR operator */
+			if (buf[*j + 1] == '|')
+			{
+				buf[*j] = 0;
+				(*j)++;
+				info->cmd_buf_type = CMD_OR;
+
+				return (1); /* Returns 1 if logical OR operator is found */
+			}
+			break;
+		case '&':
+			/* Check for logical AND operator */
+			if (buf[*j + 1] == '&')
+			{
+				buf[*j] = 0;
+				(*j)++;
+				info->cmd_buf_type = CMD_AND;
+				return (1); /* Returns 1 if logical AND operator is found */
+			}
+			break;
+		case ';':
+			/* Check for command chain operator */
+			buf[*j] = 0;
+			info->cmd_buf_type = CMD_CHAIN;
+			return (1); /* Returns 1 if command chain operator is found */
+		default:
+			break;
+	}
+	return (0); /* Returns 0 if no operator is found */
+}
+
+/**
+ * is_chain - Checks if the position has changed, indicating an operator was found
+ * @info: This pointer refers to the parameter struct
+ * @buf: This pointer refers to the char buffer
+ * @p: This variable refers to the current position in buf
+ *
+ * Return: 1 if position has changed, 0 otherwise
+ */
 int is_chain(info_t *info, char *buf, size_t *p)
 {
-	size_t j = *p;
+	/* Declaration */
+	size_t j;
 
-	if (buf[j] == '|' && buf[j + 1] == '|')
-	{
-		buf[j] = 0;
-		j++;
-		info->cmd_buf_type = CMD_OR;
-	}
-	else if (buf[j] == '&' && buf[j + 1] == '&')
-	{
-		buf[j] = 0;
-		j++;
-		info->cmd_buf_type = CMD_AND;
-	}
-	else if (buf[j] == ';') /* found end of this command */
-	{
-		buf[j] = 0; /* replace semicolon with null */
-		info->cmd_buf_type = CMD_CHAIN;
-	}
-	else
-		return (0);
-	*p = j;
-	return (1);
+	j = *p;
+
+	/* Use loop */
+	*p = j + check_operator(info, buf, &j);
+
+	/* Use if */
+	return ((*p > j) ? 1 : 0); /* Returns 1 if position has changed, 0 otherwise */
 }
 
 /**
- * check_chain - checks we should continue chaining based on last status
- * @info: the parameter struct
- * @buf: the char buffer
- * @p: address of current position in buf
- * @i: starting position in buf
- * @len: length of buf
+ * check_condition - Checks the condition of the command buffer type
+ * @info: This pointer refers to the parameter struct
  *
- * Return: Void
+ * Return: 1 if condition is met, 0 otherwise
  */
-void check_chain(info_t *info, char *buf, size_t *p, size_t i, size_t len)
+int check_condition(info_t *info)
 {
-	size_t j = *p;
-
-	if (info->cmd_buf_type == CMD_AND)
-	{
-		if (info->status)
-		{
-			buf[i] = 0;
-			j = len;
-		}
-	}
-	if (info->cmd_buf_type == CMD_OR)
-	{
-		if (!info->status)
-		{
-			buf[i] = 0;
-			j = len;
-		}
-	}
-
-	*p = j;
+	return ((info->cmd_buf_type == CMD_AND && info->status) ||
+			(info->cmd_buf_type == CMD_OR && !info->status)); /* Returns 1 if condition is met, 0 otherwise */
 }
 
 /**
- * replace_alias - replaces an aliases in the tokenized string
- * @info: the parameter struct
+ * update_buffer_and_index - Updates the buffer and index based on the condition
+ * @info: This pointer refers to the parameter struct
+ * @buf: This pointer refers to the char buffer
+ * @index: This variable refers to the current position in buf
+ * @len: This variable refers to the length of the buffer
  *
- * Return: 1 if replaced, 0 otherwise
+ * Return: Nothing (void function)
+ */
+void update_buffer_and_index(info_t *info, char *buf,
+		size_t *index, size_t len)
+{
+	/* Declaration */
+	int condition = check_condition(info);
+
+	/* Use if */
+	buf[*index] = condition ? 0 : buf[*index];
+
+	/* Use loop */
+	*index = condition ? len : *index;
+}
+
+/**
+ * check_chain - Checks the chain and updates the buffer and index
+ * @info: This pointer refers to the parameter struct
+ * @buf: This pointer refers to the char buffer
+ * @p: This variable refers to the current position in buf
+ * @i: This variable is unused
+ * @len: This variable refers to the length of the buffer
+ *
+ * Return: Nothing (void function)
+ */
+void check_chain(info_t *info, char *buf,
+		size_t *p, __attribute__((unused)) size_t i, size_t len)
+{
+	/* Declaration */
+	size_t j = *p;
+
+	/* Call the function to update the buffer and index */
+	update_buffer_and_index(info, buf, &j, len);
+
+	/* Use loop */
+	*p = j;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*****************************************/
+/**
+ * get_node - Retrieves a node from the alias list
+ * @info: This pointer refers to the parameter struct
+ *
+ * Return: Node if found, NULL otherwise
+ */
+list_t *get_node(info_t *info)
+{
+	/* Use if */
+	if (!info)
+		return (NULL);
+
+	return (node_starts_with(info->alias, info->argv[0], '=')); /* Returns node if found, NULL otherwise */
+}
+
+/**
+ * get_new_p - Retrieves a new pointer from the node
+ * @node: This pointer refers to the node
+ *
+ * Return: New pointer if found, NULL otherwise
+ */
+char *get_new_p(list_t *node)
+{
+	/* Declaration */
+	char *p;
+
+	/* Use if */
+	if (!node)
+		return (NULL);
+
+	p = _strchr(node->str, '=');
+
+	return (p ? _strdup(p + 1) : NULL); /* Returns new pointer if found, NULL otherwise */
+}
+
+/**
+ * replace_alias - Replaces the alias in the argv[0] with the value from the alias list
+ * @info: This pointer refers to the parameter struct
+ *
+ * Return: 1 if alias is replaced, 0 otherwise
  */
 int replace_alias(info_t *info)
 {
-	int i;
+	/* Declaration */
+	int i = 0;
 	list_t *node;
 	char *p;
 
-	for (i = 0; i < 10; i++)
-	{
-		node = node_starts_with(info->alias, info->argv[0], '=');
+	/* Use if */
+	if (!info)
+		return (0);
+
+	/* Use loop */
+	do {
+		node = get_node(info);
+
+		/* Use if */
 		if (!node)
 			return (0);
+
+		p = get_new_p(node);
+
+		/* Use if */
+		if (!p)
+			return (0);
 		free(info->argv[0]);
-		p = _strchr(node->str, '=');
-		if (!p)
-			return (0);
-		p = _strdup(p + 1);
-		if (!p)
-			return (0);
 		info->argv[0] = p;
-	}
-	return (1);
+		i++;
+	} while (i < 10 && info->argv[0] == NULL);
+
+	return (info->argv[0] != NULL); /* Returns 1 if alias is replaced, 0 otherwise */
 }
 
 /**
- * replace_vars - replaces vars in the tokenized string
- * @info: the parameter struct
+ * check_variable_type - Checks the type of the variable in argv[i]
+ * @info: This pointer refers to the parameter struct
+ * @i: This variable refers to the index of argv
  *
- * Return: 1 if replaced, 0 otherwise
+ * Return: 0 if not a variable, 1 if status variable, 2 if PID variable, 3 otherwise
+ */
+int check_variable_type(info_t *info, int i)
+{
+	/* Use if */
+	if (info->argv[i][0] != '$' || !info->argv[i][1])
+		return 0;
+	else if (!_strcmp(info->argv[i], "$?"))
+		return 1;
+	else if (!_strcmp(info->argv[i], "$$"))
+		return 2;
+	else
+		return 3; /* Returns 0 if not a variable, 1 if status variable, 2 if PID variable, 3 otherwise */
+}
+
+/**
+ * replace_string_with_value - Replaces the string in argv[i] with the value
+ * @info: This pointer refers to the parameter struct
+ * @i: This variable refers to the index of argv
+ * @value: This variable refers to the value to replace with
+ *
+ * Return: Nothing (void function)
+ */
+void replace_string_with_value(info_t *info, int i, int value)
+{
+	replace_string(&(info->argv[i]), _strdup(convert_number(value, 10, 0)));
+}
+
+/**
+ * _get_node_ - Retrieves a node from the environment list
+ * @info: This pointer refers to the parameter struct
+ * @i: This variable refers to the index of argv
+ *
+ * Return: Node if found, NULL otherwise
+ */
+list_t *_get_node_(info_t *info, int i)
+{
+	return node_starts_with(info->env, &info->argv[i][1], '='); /* Returns node if found, NULL otherwise */
+}
+
+/**
+ * replace_with_node_value - Replaces the string in argv[i] with the value from the node
+ * @info: This pointer refers to the parameter struct
+ * @i: This variable refers to the index of argv
+ * @node: This pointer refers to the node
+ *
+ * Return: Nothing (void function)
+ */
+void replace_with_node_value(info_t *info, int i, list_t *node)
+{
+	replace_string(&(info->argv[i]), _strdup(_strchr(node->str, '=') + 1));
+}
+
+/**
+ * replace_with_empty_string - Replaces the string in argv[i] with an empty string
+ * @info: This pointer refers to the parameter struct
+ * @i: This variable refers to the index of argv
+ *
+ * Return: Nothing (void function)
+ */
+void replace_with_empty_string(info_t *info, int i)
+{
+	replace_string(&info->argv[i], _strdup(""));
+}
+
+
+/**
+ * replace_vars - Replaces the variables in argv with their corresponding values
+ * @info: This pointer refers to the parameter struct
+ *
+ * Return: 0 (void function)
  */
 int replace_vars(info_t *info)
 {
+	/* Declaration */
 	int i = 0;
 	list_t *node;
+	int var_type;
 
-	for (i = 0; info->argv[i]; i++)
-	{
-		if (info->argv[i][0] != '$' || !info->argv[i][1])
-			continue;
+	/* Use loop */
+	do {
+		var_type = check_variable_type(info, i);
 
-		if (!_strcmp(info->argv[i], "$?"))
+		/* Use switch */
+		switch (var_type)
 		{
-			replace_string(&(info->argv[i]),
-				_strdup(convert_number(info->status, 10, 0)));
-			continue;
+			case 0:
+				i++;
+				continue;
+			case 1:
+				replace_string_with_value(info, i, info->status);
+				break;
+			case 2:
+				if (kill(getpid(), 0) == 0)
+				{
+					replace_string_with_value(info, i, getpid());
+				}
+				else
+				{
+					replace_with_empty_string(info, i);
+				}
+				break;
+			case 3:
+				node = _get_node_(info, i);
+				if (node)
+					replace_with_node_value(info, i, node);
+				else
+					replace_with_empty_string(info, i);
+				break;
 		}
-		if (!_strcmp(info->argv[i], "$$"))
-		{
-			replace_string(&(info->argv[i]),
-				_strdup(convert_number(getpid(), 10, 0)));
-			continue;
-		}
-		node = node_starts_with(info->env, &info->argv[i][1], '=');
-		if (node)
-		{
-			replace_string(&(info->argv[i]),
-				_strdup(_strchr(node->str, '=') + 1));
-			continue;
-		}
-		replace_string(&info->argv[i], _strdup(""));
+		i++;
+	} while (info->argv[i]);
 
-	}
-	return (0);
+	return (0); /* Returns 0 (void function) */
 }
 
 /**
- * replace_string - replaces string
- * @old: address of old string
- * @new: new string
+ * replace_string - Replaces old string with new string
+ * @old: This pointer refers to the old string
+ * @new: This pointer refers to the new string
  *
  * Return: 1 if replaced, 0 otherwise
  */
 int replace_string(char **old, char *new)
 {
-	free(*old);
-	*old = new;
-	return (1);
+	/* Use if */
+	if (old == NULL || new == NULL)
+	{
+		_puts("Error: Null pointer passed to replace_string\n");
+		return (0); /* Returns 0 if either old or new is NULL */
+	}
+	if (*old != new)
+	{
+		free(*old);
+		*old = new;
+	}
+	return (1); /* Returns 1 if replaced */
 }

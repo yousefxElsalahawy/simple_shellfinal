@@ -6,28 +6,43 @@
  * Return: 0 if no numbers in string, converted number otherwise
  *       -1 on error
  */
-int _erratoi(char *s)
+char *process_plus_sign(char *s)
 {
-	int i = 0;
-	unsigned long int result = 0;
+	char *p = s;
 
-	if (*s == '+')
-		s++;  /* TODO: why does this make main return 255? */
-	for (i = 0;  s[i] != '\0'; i++)
-	{
-		if (s[i] >= '0' && s[i] <= '9')
+	do {
+		p++;
+	} while (*p == '+');
+	return (p);
+}
+
+unsigned long int process_digits(char *s)
+{
+	unsigned long int result = 0;
+	char current_char = *s;
+
+	do {
+		if (current_char >= '0' && current_char <= '9')
 		{
-			result *= 10;
-			result += (s[i] - '0');
+			result = (result << 3) + (result << 1) + (current_char - '0');
 			if (result > INT_MAX)
 				return (-1);
 		}
 		else
 			return (-1);
-	}
+
+		current_char = *(++s);
+	} while (current_char != '\0');
+
 	return (result);
 }
 
+int _erratoi(char *s)
+{
+	s = process_plus_sign(s);
+
+	return (process_digits(s));
+}
 /**
  * print_error - prints an error message
  * @info: the parameter & return info struct
@@ -35,15 +50,34 @@ int _erratoi(char *s)
  * Return: 0 if no numbers in string, converted number otherwise
  *        -1 on error
  */
-void print_error(info_t *info, char *estr)
+void print_message(char *message)
 {
-	_eputs(info->fname);
+	_eputs(message);
 	_eputs(": ");
+}
+
+void print_error_part1(info_t *info)
+{
+	print_message(info->fname);
+}
+
+void print_error_part2(info_t *info)
+{
 	print_d(info->line_count, STDERR_FILENO);
 	_eputs(": ");
-	_eputs(info->argv[0]);
-	_eputs(": ");
-	_eputs(estr);
+}
+
+void print_error_part3(info_t *info, char *estr)
+{
+	print_message(info->argv[0]);
+	print_message(estr);
+}
+
+void print_error(info_t *info, char *estr)
+{
+	print_error_part1(info);
+	print_error_part2(info);
+	print_error_part3(info, estr);
 }
 
 /**
@@ -53,38 +87,65 @@ void print_error(info_t *info, char *estr)
  *
  * Return: number of characters printed
  */
-int print_d(int input, int fd)
+int handle_putchar(int fd)
 {
-	int (*__putchar)(char) = _putchar;
-	int i, count = 0;
-	unsigned int _abs_, current;
+	return ((fd == STDERR_FILENO) ? 1 : 0);
+}
 
-	if (fd == STDERR_FILENO)
-		__putchar = _eputchar;
+unsigned int handle_abs(int input, int (*__putchar)(char), int *count)
+{
+	unsigned int _abs_;
+
 	if (input < 0)
 	{
 		_abs_ = -input;
 		__putchar('-');
-		count++;
+		(*count)++;
 	}
 	else
 		_abs_ = input;
-	current = _abs_;
-	for (i = 1000000000; i > 1; i /= 10)
-	{
+	return (_abs_);
+}
+
+int handle_current(unsigned int _abs_, int (*__putchar)(char), int *count)
+{
+	int i = 1000000000;
+	unsigned int current = _abs_;
+
+	do {
 		if (_abs_ / i)
 		{
 			__putchar('0' + current / i);
-			count++;
+			(*count)++;
 		}
 		current %= i;
-	}
+		i /= 10;
+	} while (i > 1);
+	return (current);
+}
+
+void handle_last_digit(unsigned int current,
+		int (*__putchar)(char), int *count)
+{
 	__putchar('0' + current);
-	count++;
+	(*count)++;
+}
+
+int print_d(int input, int fd)
+{
+	int (*__putchar)(char) = _putchar;
+	int count = 0;
+	unsigned int _abs_, current;
+
+	int is_stderr = handle_putchar(fd);
+
+	__putchar = is_stderr ? _eputchar : _putchar;
+	_abs_ = handle_abs(input, __putchar, &count);
+	current = handle_current(_abs_, __putchar, &count);
+	handle_last_digit(current, __putchar, &count);
 
 	return (count);
 }
-
 /**
  * convert_number - converter function, a clone of itoa
  * @num: number
@@ -93,31 +154,48 @@ int print_d(int input, int fd)
  *
  * Return: string
  */
+char *handle_sign(long int num, int flags,
+		unsigned long *n, char *sign)
+{
+	(!(flags & CONVERT_UNSIGNED) && num < 0) ?
+		(*n = -num, *sign = '-') : (*n = num, *sign = 0);
+	return ((flags & CONVERT_LOWERCASE) ? "0123456789abcdef" :
+			"0123456789ABCDEF");
+}
+
+void convert_base(unsigned long *n, int base, char **ptr, char *array)
+{
+	do {
+		*--(*ptr) = array[*n % base];
+		*n /= base;
+	} while (*n != 0);
+}
+
+void handle_negative_sign(char **ptr, char sign)
+{
+	if (sign)
+		*--(*ptr) = sign;
+}
+
 char *convert_number(long int num, int base, int flags)
 {
 	static char *array;
 	static char buffer[50];
 	char sign = 0;
 	char *ptr;
-	unsigned long n = num;
+	unsigned long n;
 
-	if (!(flags & CONVERT_UNSIGNED) && num < 0)
-	{
-		n = -num;
-		sign = '-';
-
-	}
-	array = flags & CONVERT_LOWERCASE ? "0123456789abcdef" : "0123456789ABCDEF";
+	array = handle_sign(num, flags, &n, &sign);
 	ptr = &buffer[49];
 	*ptr = '\0';
 
-	do	{
-		*--ptr = array[n % base];
-		n /= base;
+	do {
+
+		convert_base(&n, base, &ptr, array);
 	} while (n != 0);
 
-	if (sign)
-		*--ptr = sign;
+	handle_negative_sign(&ptr, sign);
+
 	return (ptr);
 }
 
@@ -127,14 +205,22 @@ char *convert_number(long int num, int base, int flags)
  *
  * Return: Always 0;
  */
+void set_to_null(char *p)
+{
+	do {
+		*p = '\0';
+		p++;
+	} while (*p != '\0');
+}
+
 void remove_comments(char *buf)
 {
-	int i;
+	char *p = buf;
 
-	for (i = 0; buf[i] != '\0'; i++)
-		if (buf[i] == '#' && (!i || buf[i - 1] == ' '))
-		{
-			buf[i] = '\0';
-			break;
-		}
+	do {
+		if (*p == '#' && (p == buf || *(p - 1) == ' '))
+			set_to_null(p);
+		else
+			p++;
+	} while (*p != '\0');
 }
